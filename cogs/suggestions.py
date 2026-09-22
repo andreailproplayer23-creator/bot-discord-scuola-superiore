@@ -14,14 +14,11 @@ class SuggerimentoModal(Modal, title="💡 Invia un Suggerimento / Feedback"):
 
         user = interaction.user
         guild = interaction.guild
-        channel = guild.get_channel(config.CHANNEL_SUGGESTIONS) # Lo aggiungiamo tra poco o usiamo l'ID diretto
 
         # 1. Invia un messaggio privato in DM a te (Founder)
-        # Troviamo il founder o inviamo direttamente al tuo ID se lo conosciamo, oppure cerchiamo chi ha il ruolo Founder nel server
         try:
             founder_role = guild.get_role(config.ROLE_FOUNDER)
             if founder_role and founder_role.members:
-                # Prende il primo membro con il ruolo Founder (tu)
                 founder = founder_role.members[0]
                 dm_embed = discord.Embed(
                     title="📥 Nuovo Suggerimento Ricevuto!",
@@ -38,9 +35,8 @@ class SuggerimentoModal(Modal, title="💡 Invia un Suggerimento / Feedback"):
         except Exception as e:
             print(f"[ERRORE] Impossibile inviare il DM al Founder: {e}")
 
-        # 2. Aggiorna o invia nel canale dei suggerimenti
-        # Cerchiamo l'ultimo messaggio del bot nel canale per aggiornare l'embed cumulativo o ne accodiamo uno
-        sug_channel = guild.get_channel(1552039683913941102)
+        # 2. Invia nel canale dei suggerimenti con il pulsante "Fatto!" allegato
+        sug_channel = guild.get_channel(config.CHANNEL_SUGGESTIONS)
         if sug_channel:
             nuovo_feedback = (
                 f"👤 **Utente:** {user.mention} ({user.display_name})\n"
@@ -51,16 +47,36 @@ class SuggerimentoModal(Modal, title="💡 Invia un Suggerimento / Feedback"):
                 nuovo_feedback += f"💬 **Note:** {self.note_extra.value}\n"
             nuovo_feedback += "----------------------------------------"
 
-            # Invia la nuova richiesta come blocco nel canale
             embed_pubblico = discord.Embed(
                 title="📥 Nuovo Suggerimento Registrato",
                 description=nuovo_feedback,
                 color=discord.Color.from_rgb(0, 162, 255)
             )
             embed_pubblico.set_footer(text=f"1ªB Informatica • Sistema Feedback")
-            await sug_channel.send(embed=embed_pubblico)
+            
+            # Inviamo l'embed con la View che contiene il pulsante "Fatto!"
+            await sug_channel.send(embed=embed_pubblico, view=FattoView())
 
         await interaction.followup.send("✅ Il tuo suggerimento è stato inviato con successo allo staff!", ephemeral=True)
+
+class FattoView(View):
+    def __init__(self):
+        super().__init__(timeout=None) # Persistente
+
+    @discord.ui.button(label="Fatto!", style=discord.ButtonStyle.danger, custom_id="btn_suggerimento_fatto", emoji="✅")
+    async def fatto_callback(self, interaction: discord.Interaction, button: Button):
+        # Verifica che sia il Founder a cliccare
+        role_founder = interaction.guild.get_role(config.ROLE_FOUNDER)
+        if not role_founder or role_founder not in interaction.user.roles:
+            await interaction.response.send_message("❌ Solo il Founder può segnare come completato questo suggerimento.", ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        try:
+            # Elimina il messaggio del suggerimento completato
+            await interaction.message.delete()
+        except Exception as e:
+            print(f"[ERRORE] Impossibile eliminare il messaggio del suggerimento: {e}")
 
 class SuggerimentiView(View):
     def __init__(self):
@@ -91,7 +107,7 @@ class SuggestionsCog(commands.Cog):
         )
         embed.set_footer(text="1ªB Informatica • Anno Scolastico 2026/2027")
 
-        target_channel = interaction.guild.get_channel(1552039683913941102)
+        target_channel = interaction.guild.get_channel(config.CHANNEL_SUGGESTIONS)
         if target_channel:
             await target_channel.send(embed=embed, view=SuggerimentiView())
             await interaction.response.send_message("✅ Pannello suggerimenti inviato nel canale dedicato!", ephemeral=True)
