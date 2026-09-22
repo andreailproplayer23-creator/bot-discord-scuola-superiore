@@ -9,6 +9,15 @@ class WelcomeExit(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         guild = member.guild
+        
+        # Assegna automaticamente il ruolo notifiche
+        notif_role = guild.get_role(config.ROLE_NOTIFICATIONS)
+        if notif_role:
+            try:
+                await member.add_roles(notif_role, reason="Assegnazione automatica ruolo notifiche all'ingresso")
+            except discord.HTTPException as e:
+                print(f"[ERRORE] Impossibile assegnare il ruolo notifiche a {member.name}: {e}")
+
         welcome_channel = guild.get_channel(config.CHANNEL_WELCOME)
         
         if welcome_channel:
