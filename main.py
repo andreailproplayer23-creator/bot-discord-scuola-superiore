@@ -31,10 +31,35 @@ intents.members = True
 intents.guilds = True
 intents.voice_states = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=intents)
+        self.guild_id = discord.Object(id=1551330601079021719)
 
-# ID del server Discord 1ªB Informatica per la sincronizzazione istantanea
-GUILD_ID = discord.Object(id=1551330601079021719)
+    async def setup_hook(self):
+        print(f"-----------------------------------")
+        print(f"[AVVIO] Caricamento dei Cogs in corso...")
+        
+        # Carica automaticamente tutti i cogs presenti nella cartella cogs prima dell'avvio
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py"):
+                cog_name = filename[:-3]
+                try:
+                    await self.load_extension(f"cogs.{cog_name}")
+                    print(f"[COG] Caricato con successo: {cog_name}")
+                except Exception as e:
+                    print(f"[ERRORE] Impossibile caricare {cog_name}: {e}")
+
+        # REGISTRAZIONE DELLE VIEW PERSISTENTI (Impedisce che i bottoni scadano al riavvio)
+        try:
+            self.add_view(SuggerimentiView())
+            self.add_view(FattoView())
+            print("[VIEWS] Viste persistenti registrate con successo!")
+        except Exception as e:
+            print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
+        print(f"-----------------------------------")
+
+bot = MyBot()
 
 @bot.event
 async def on_ready():
@@ -43,28 +68,10 @@ async def on_ready():
     print(f"ID del Bot: {bot.user.id}")
     print(f"-----------------------------------")
     
-    # Carica automaticamente tutti i cogs presenti nella cartella cogs
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            cog_name = filename[:-3]
-            try:
-                await bot.load_extension(f"cogs.{cog_name}")
-                print(f"[COG] Caricato con successo: {cog_name}")
-            except Exception as e:
-                print(f"[ERRORE] Impossibile caricare {cog_name}: {e}")
-
-    # REGISTRAZIONE DELLE VIEW PERSISTENTI (Impedisce che i bottoni scadano al riavvio)
+    # Sincronizza i comandi istantaneamente sul server specifico ora che i cogs sono pronti
     try:
-        bot.add_view(SuggerimentiView())
-        bot.add_view(FattoView())
-        print("[VIEWS] Viste persistenti registrate con successo!")
-    except Exception as e:
-        print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
-
-    # Sincronizza i comandi istantaneamente sul server specifico
-    try:
-        bot.tree.copy_global_to(guild=GUILD_ID)
-        synced = await bot.tree.sync(guild=GUILD_ID)
+        bot.tree.copy_global_to(guild=bot.guild_id)
+        synced = await bot.tree.sync(guild=bot.guild_id)
         print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
     except Exception as e:
         print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
