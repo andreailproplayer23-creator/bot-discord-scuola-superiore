@@ -32,10 +32,8 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 GUILD_ID = discord.Object(id=1551330601079021719)
 
-@bot.event
-async def on_ready():
+async def setup_bot_elements():
     print(f"-----------------------------------")
-    print(f"[AVVIO] Bot online come: {bot.user.name}")
     print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
     print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
     print(f"-----------------------------------")
@@ -66,6 +64,12 @@ async def on_ready():
     except Exception as e:
         print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
     print(f"-----------------------------------")
+
+@bot.event
+async def on_ready():
+    print(f"Bot online come: {bot.user.name} (ID: {bot.user.id})")
+    # Eseguiamo il setup non appena il bot è pronto sul serio
+    await setup_bot_elements()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
