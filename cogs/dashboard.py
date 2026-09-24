@@ -27,50 +27,79 @@ class DashboardCog(commands.Cog):
         if not guild:
             return
 
-        # Statistiche dettagliate della gilda
+        # --- RACCOLTA DATI AVANZATA (10+ INFORMAZIONI) ---
         total_members = guild.member_count
         online_members = sum(1 for m in guild.members if m.status != discord.Status.offline)
         bots_count = sum(1 for m in guild.members if m.bot)
         humans_count = total_members - bots_count
         
-        total_channels = len(guild.channels)
+        text_channels = len(guild.text_channels)
+        voice_channels = len(guild.voice_channels)
+        categories = len(guild.categories)
         total_roles = len(guild.roles)
+        
         boost_level = guild.premium_tier
         boost_count = guild.premium_subscription_count
+        owner = guild.owner.name if guild.owner else "Sconosciuto"
         
-        # Creazione dell'embed super dettagliato
+        # Data di creazione del server formattata
+        created_at = guild.created_at.strftime("%d/%m/%Y")
+        
+        # Conteggio emoji e sticker
+        emojis_count = len(guild.emojis)
+        stickers_count = len(guild.stickers)
+        
+        # Creazione dell'embed con le nuove categorie
         embed = discord.Embed(
-            title="📊 Dashboard Live • 1ªB Informatica",
-            description="Panoramica completa in tempo reale dello stato del server. Si aggiorna automaticamente ogni 5 secondi.",
+            title="📊 Dashboard Live Ufficiale • 1ªB Informatica",
+            description="Panoramica dettagliata in tempo reale dello stato del server. Aggiornamento automatico ogni 5s.",
             color=discord.Color.from_rgb(0, 162, 232),
             timestamp=datetime.datetime.now()
         )
 
+        # 1. Utenti & Presenze
         embed.add_field(
-            name="👥 Utenti & Bot",
-            value=f"• Umani: **{humans_count}**\n• Bot: **{bots_count}**\n• Online: **{online_members}**",
+            name="👥 Utenti",
+            value=f"• Totale: **{total_members}**\n• Umani: **{humans_count}**\n• Bot: **{bots_count}**\n• Online: **{online_members}**",
             inline=True
         )
 
+        # 2. Canali & Categorie
         embed.add_field(
-            name="⚙️ Struttura Server",
-            value=f"• Canali: **{total_channels}**\n• Ruoli: **{total_roles}**\n• Livello Boost: **Liv. {boost_level}** ({boost_count} boost)",
+            name="📁 Canali",
+            value=f"• Testuali: **{text_channels}**\n• Vocali: **{voice_channels}**\n• Categorie: **{categories}**\n• Ruoli: **{total_roles}**",
             inline=True
         )
 
+        # 3. Server Info & Boost
         embed.add_field(
-            name="🤖 Stato Bot",
-            value=f"• Ping: **{round(self.bot.latency * 1000)}ms**\n• Host: **Render**\n• Stato: **Online 24/7**",
+            name="⚡ Community",
+            value=f"• Owner: **{owner}**\n• Creato il: **{created_at}**\n• Liv. Boost: **Liv. {boost_level}** ({boost_count})",
             inline=True
         )
 
+        # 4. Risorse & Extra
+        embed.add_field(
+            name="🎨 Risorse",
+            value=f"• Emoji: **{emojis_count}**\n• Sticker: **{stickers_count}**",
+            inline=True
+        )
+
+        # 5. Stato del Bot
+        embed.add_field(
+            name="🤖 Sistema Bot",
+            value=f"• Ping: **{round(self.bot.latency * 1000)}ms**\n• Host: **Render (24/7)**",
+            inline=True
+        )
+
+        # Riga dei comandi rapidi pulita
         embed.add_field(
             name="📌 Collegamenti Rapidi",
-            value="Usa i comandi ` / ` per interagire con i quiz, i ticket e i suggerimenti!",
+            value="Usa i comandi ` / ` per interagire con i quiz, i ticket e i suggerimenti nel server!",
             inline=False
         )
 
-        embed.set_footer(text=f"Server ID: {guild.id} • Ultimo aggiornamento")
+        embed.set_footer(text=f"ID Server: {guild.id} • Ultimo aggiornamento live")
 
         try:
             message = await self.get_or_create_dashboard_message(channel)
