@@ -25,12 +25,16 @@ class QuizButton(Button):
         self.is_correct = is_correct
 
     async def callback(self, interaction: discord.Interaction):
+        # Disattiva tutti i pulsanti della vista non appena viene data una risposta
         for child in self.view.children:
             child.disabled = True
             if child.is_correct:
                 child.style = discord.ButtonStyle.success
             elif child == self:
                 child.style = discord.ButtonStyle.danger
+
+        # Segna la vista come completata così il timeout non sovrascrive il messaggio
+        self.view.is_finished_quiz = True
 
         if self.is_correct:
             embed = interaction.message.embeds[0]
@@ -56,10 +60,29 @@ class QuizButton(Button):
 class QuizView(View):
     def __init__(self, opzioni, risposta_corretta):
         super().__init__(timeout=30)
+        self.is_finished_quiz = False
+        self.message = None
         random.shuffle(opzioni)
         for opzione in opzioni:
             is_correct = (opzione == risposta_corretta)
             self.add_item(QuizButton(label=opzione, is_correct=is_correct))
+
+    # Gestisce lo scadere dei 30 secondi se nessuno risponde
+    async def on_timeout(self):
+        if self.is_finished_quiz:
+            return  # Se qualcuno ha già risposto, non facciamo nulla
+
+        for child in self.children:
+            child.disabled = True
+
+        if self.message:
+            try:
+                for embed in self.message.embeds:
+                    embed.color = discord.Color.dark_grey()
+                    embed.add_field(name="Risultato", value="⏰ **Tempo scaduto!** Nessuno ha risposto in tempo.", inline=False)
+                await self.message.edit(embed=embed, view=self)
+            except Exception as e:
+                print(f"[ERRORE] Impossibile aggiornare il messaggio alla scadenza del timeout: {e}")
 
 class QuizCog(commands.Cog):
     def __init__(self, bot):
@@ -89,13 +112,18 @@ class QuizCog(commands.Cog):
         embed.set_footer(text=f"Richiesto da {interaction.user.display_name} • Hai 30 secondi per rispondere!")
 
         view = QuizView(q['opzioni'], q['risposta_corretta'])
+        
+        content_notifica = f"<@&{config.ROLE_NOTIFICATIONS}> Nuova domanda di quiz disponibile!"
 
         if interaction.channel_id == config.CHANNEL_QUIZ:
-            await interaction.response.send_message(embed=embed, view=view)
+            await interaction.response.send_message(content=content_notifica, embed=embed, view=view)
+            # Salva il messaggio inviato per poterlo modificare allo scadere del timeout
+            view.message = await interaction.original_response()
         else:
             channel = interaction.guild.get_channel(config.CHANNEL_QUIZ)
             if channel:
-                await channel.send(embed=embed, view=view)
+                sent_msg = await channel.send(content=content_notifica, embed=embed, view=view)
+                view.message = sent_msg
                 await interaction.response.send_message("✅ Domanda del quiz avviata nel canale dedicato!", ephemeral=True)
             else:
                 await interaction.response.send_message("❌ Canale quiz non trovato nel config!", ephemeral=True)

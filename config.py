@@ -1,9 +1,9 @@
 # CONFIGURAZIONE ID DEL SERVER DISCORD - 1ªB INFORMATICA
 
 # ID dei Ruoli
-ROLE_GUEST = 1551331275581821008     # Sostituisci con l'ID del ruolo Ospite
+ROLE_GUEST = 1551331275581821008    # Sostituisci con l'ID del ruolo Ospite
 ROLE_STUDENT = 1551331221928284191   # Sostituisci con l'ID del ruolo Studente
-ROLE_MOD = 1551331068592783460       # ID Moderatore
+ROLE_MOD = 1551331068592783460      # ID Moderatore
 ROLE_FOUNDER = 1551330784034684938  # ID Founder
 ROLE_NOTIFICATIONS = 1552038644947353630 # ID Ruolo Notifiche
 
@@ -23,3 +23,7 @@ CHANNEL_SUGGESTIONS = 1552039683913941102   # ID canale 💡│suggerimenti
 # ID Canali Quiz e Classifica
 CHANNEL_QUIZ = 1552729523869720667          # ID canale 🧠│quiz-informatica
 CHANNEL_LEADERBOARD = 1552729578030505994   # ID canale 🏆│classifica-quiz
+
+# Credenziali ClasseViva
+CV_USERNAME = "G14380739"
+CV_PASSWORD = "Fabio1972@"
