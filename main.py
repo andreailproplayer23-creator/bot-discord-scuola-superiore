@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import os
-import asyncio
 from flask import Flask
 from threading import Thread
 
@@ -29,72 +28,51 @@ intents.members = True
 intents.guilds = True
 intents.voice_states = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
-GUILD_ID = discord.Object(id=1551330601079021719)
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=intents)
+        self.guild_id = discord.Object(id=1551330601079021719)
+
+    async def setup_hook(self):
+        print("-----------------------------------")
+        print("[SETUP] Avvio caricamento moduli (Cogs)...")
+        
+        # Caricamento esplicito di tutti i cogs
+        if os.path.exists("./cogs"):
+            for filename in os.listdir("./cogs"):
+                if filename.endswith(".py"):
+                    cog_name = filename[:-3]
+                    try:
+                        await self.load_extension(f"cogs.{cog_name}")
+                        print(f"[COG] Caricato con successo: {cog_name}")
+                    except Exception as e:
+                        print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
+        
+        # Registrazione delle viste persistenti
+        try:
+            self.add_view(SuggerimentiView())
+            self.add_view(FattoView())
+            print("[VIEWS] Viste persistenti registrate con successo!")
+        except Exception as e:
+            print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
+
+        # Sincronizzazione dei comandi sulla gilda specifica
+        try:
+            self.tree.copy_global_to(guild=self.guild_id)
+            synced = await self.tree.sync(guild=self.guild_id)
+            print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
+        except Exception as e:
+            print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
+        print("-----------------------------------")
+
+bot = MyBot()
 
 @bot.event
 async def on_ready():
-    print(f"-----------------------------------")
-    print(f"[AVVIO] Bot online come: {bot.user.name}")
-    print(f"[AVVIO] Sincronizzazione comandi sul server...")
-    
-    try:
-        bot.tree.copy_global_to(guild=GUILD_ID)
-        synced = await bot.tree.sync(guild=GUILD_ID)
-        print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
-    except Exception as e:
-        print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
-    print(f"-----------------------------------")
+    print(f"[ONLINE] Bot connesso come: {bot.user.name} (ID: {bot.user.id})")
 
-async def main():
-    print(f"-----------------------------------")
-    print(f"[SETUP] Avvio caricamento moduli (Cogs)...")
-    
-    # Caricamento esplicito dei cog prima di avviare il bot
-    if os.path.exists("./cogs"):
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py"):
-                cog_name = filename[:-3]
-                try:
-                    await bot.load_extension(f"cogs.{cog_name}")
-                    print(f"[COG] Caricato con successo: {cog_name}")
-                except Exception as e:
-                    print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
-    else:
-        print("[ERRORE] La cartella './cogs' non è stata trovata!")
-    
-    # Registrazione viste persistenti
-    try:
-        bot.add_view(SuggerimentiView())
-        bot.add_view(FattoView())
-        print("[VIEWS] Viste persistenti registrate con successo!")
-    except Exception as e:
-        print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
-
-    TOKEN = os.getenv("DISCORD_TOKEN")
-    if not TOKEN:
-        print("[ERRORE CRITICO] Il token di Discord non è stato trovato nelle variabili d'ambiente!")
-        return
-
-    # Avviamo la connessione a Discord prima di sincronizzare l'albero
-    print(f"[AVVIO] Connessione a Discord in corso...")
-    await bot.login(TOKEN)
-    
-    # Sincronizzazione immediata dei comandi sulla gilda 1ªB Informatica
-    GUILD_ID = discord.Object(id=1551330601079021719)
-    try:
-        bot.tree.copy_global_to(guild=GUILD_ID)
-        synced = await bot.tree.sync(guild=GUILD_ID)
-        print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
-    except Exception as e:
-        print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
-    print(f"-----------------------------------")
-
-    await bot.connect()
+TOKEN = os.getenv("DISCORD_TOKEN")
 
 if __name__ == "__main__":
     keep_alive()
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("[SPEGNIMENTO] Bot arrestato manualmente.")
+    bot.run(TOKEN)
