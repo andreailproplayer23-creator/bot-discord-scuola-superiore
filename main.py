@@ -7,8 +7,6 @@ from threading import Thread
 
 # Importiamo le viste dai cogs per renderle persistenti
 from cogs.suggestions import SuggerimentiView, FattoView
-# Se hai altre View persistenti (es. Ticket o Verifiche), puoi importarle qui sotto:
-# from cogs.tickets import TicketView
 
 # Configurazione del server Flask per UptimeRobot (mantenimento 24/7)
 app = Flask('')
@@ -31,39 +29,39 @@ intents.members = True
 intents.guilds = True
 intents.voice_states = True
 
-class MyBot(commands.Bot):
-    def __init__(self):
-        super().__init__(command_prefix="!", intents=intents)
-        self.guild_id = discord.Object(id=1551330601079021719)
-
-    async def setup_hook(self):
-        print(f"-----------------------------------")
-        print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
-        print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
-        
-        # Carica automaticamente tutti i cogs presenti nella cartella cogs prima dell'avvio
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py"):
-                cog_name = filename[:-3]
-                try:
-                    await self.load_extension(f"cogs.{cog_name}")
-                    print(f"[COG] Caricato con successo: {cog_name}")
-                except Exception as e:
-                    print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
-
-bot = MyBot()
+bot = commands.Bot(command_prefix="!", intents=intents)
+GUILD_ID = discord.Object(id=1551330601079021719)
 
 @bot.event
 async def on_ready():
     print(f"-----------------------------------")
-    print(f"Bot online come: {bot.user.name}")
-    print(f"ID del Bot: {bot.user.id}")
+    print(f"[AVVIO] Bot online come: {bot.user.name}")
+    print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
+    print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
     print(f"-----------------------------------")
     
-    # Sincronizza i comandi istantaneamente sul server specifico ora che i cogs sono pronti
+    # Caricamento esplicito dei Cogs
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            cog_name = filename[:-3]
+            try:
+                await bot.load_extension(f"cogs.{cog_name}")
+                print(f"[COG] Caricato con successo: {cog_name}")
+            except Exception as e:
+                print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
+
+    # Registrazione delle viste persistenti
     try:
-        bot.tree.copy_global_to(guild=bot.guild_id)
-        synced = await bot.tree.sync(guild=bot.guild_id)
+        bot.add_view(SuggerimentiView())
+        bot.add_view(FattoView())
+        print("[VIEWS] Viste persistenti registrate con successo!")
+    except Exception as e:
+        print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
+
+    # Sincronizzazione dei comandi sul server
+    try:
+        bot.tree.copy_global_to(guild=GUILD_ID)
+        synced = await bot.tree.sync(guild=GUILD_ID)
         print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
     except Exception as e:
         print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
