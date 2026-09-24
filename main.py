@@ -70,15 +70,27 @@ async def main():
         print("[VIEWS] Viste persistenti registrate con successo!")
     except Exception as e:
         print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
-    print(f"-----------------------------------")
 
     TOKEN = os.getenv("DISCORD_TOKEN")
     if not TOKEN:
         print("[ERRORE CRITICO] Il token di Discord non è stato trovato nelle variabili d'ambiente!")
         return
 
-    # Avviamo il bot con bot.start() all'interno del loop attivo
-    await bot.start(TOKEN)
+    # Avviamo la connessione a Discord prima di sincronizzare l'albero
+    print(f"[AVVIO] Connessione a Discord in corso...")
+    await bot.login(TOKEN)
+    
+    # Sincronizzazione immediata dei comandi sulla gilda 1ªB Informatica
+    GUILD_ID = discord.Object(id=1551330601079021719)
+    try:
+        bot.tree.copy_global_to(guild=GUILD_ID)
+        synced = await bot.tree.sync(guild=GUILD_ID)
+        print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
+    except Exception as e:
+        print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
+    print(f"-----------------------------------")
+
+    await bot.connect()
 
 if __name__ == "__main__":
     keep_alive()
