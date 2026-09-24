@@ -48,7 +48,7 @@ async def on_ready():
 
 async def main():
     print(f"-----------------------------------")
-    print(f"[SETUP] Caricamento cogs in corso...")
+    print(f"[SETUP] Avvio caricamento moduli (Cogs)...")
     
     # Caricamento esplicito dei cog prima di avviare il bot
     if os.path.exists("./cogs"):
@@ -60,6 +60,8 @@ async def main():
                     print(f"[COG] Caricato con successo: {cog_name}")
                 except Exception as e:
                     print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
+    else:
+        print("[ERRORE] La cartella './cogs' non è stata trovata!")
     
     # Registrazione viste persistenti
     try:
@@ -71,8 +73,16 @@ async def main():
     print(f"-----------------------------------")
 
     TOKEN = os.getenv("DISCORD_TOKEN")
+    if not TOKEN:
+        print("[ERRORE CRITICO] Il token di Discord non è stato trovato nelle variabili d'ambiente!")
+        return
+
+    # Avviamo il bot con bot.start() all'interno del loop attivo
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
     keep_alive()
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("[SPEGNIMENTO] Bot arrestato manualmente.")
