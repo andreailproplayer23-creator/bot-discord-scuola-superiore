@@ -36,7 +36,7 @@ async def on_ready():
     print("-----------------------------------")
     print(f"[AVVIO] Bot connesso come: {bot.user.name}")
     
-    # Caricamento esplicito dei Cogs
+    # Caricamento esplicito dei Cogs rimanenti
     if os.path.exists("./cogs"):
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):

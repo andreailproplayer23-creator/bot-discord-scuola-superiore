@@ -23,7 +23,3 @@ CHANNEL_SUGGESTIONS = 1552039683913941102   # ID canale 💡│suggerimenti
 # ID Canali Quiz e Classifica
 CHANNEL_QUIZ = 1552729523869720667          # ID canale 🧠│quiz-informatica
 CHANNEL_LEADERBOARD = 1552729578030505994   # ID canale 🏆│classifica-quiz
-
-# Credenziali ClasseViva
-CV_USERNAME = "G14380739"
-CV_PASSWORD = "Fabio1972@"
