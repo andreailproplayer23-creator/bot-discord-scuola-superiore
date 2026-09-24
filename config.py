@@ -26,3 +26,6 @@ CHANNEL_LEADERBOARD = 1552729578030505994   # ID canale 🏆│classifica-quiz
 
 # ID Canale Dashboard
 CHANNEL_DASHBOARD = 1552764225901039747     # ID canale 📊│dashboard
+
+# ID Canale Convertitore
+CHANNEL_CONVERTER = 1552767371465199686     # ID canale 🧮│convertitore
