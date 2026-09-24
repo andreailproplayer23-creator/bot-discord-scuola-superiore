@@ -1,0 +1,12 @@
+[
+  {
+    "domanda": "Quale linguaggio di programmazione viene comunemente eseguito direttamente all'interno del browser web?",
+    "opzioni": ["Python", "JavaScript", "C++", "Java"],
+    "risposta_corretta": "JavaScript"
+  },
+  {
+    "domanda": "Cosa significa l'acronimo RAM?",
+    "opzioni": ["Readily Available Memory", "Random Access Memory", "Run Active Machine", "Rapid Access Module"],
+    "risposta_corretta": "Random Access Memory"
+  }
+]
