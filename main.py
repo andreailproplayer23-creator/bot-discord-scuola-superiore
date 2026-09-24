@@ -38,7 +38,8 @@ class MyBot(commands.Bot):
 
     async def setup_hook(self):
         print(f"-----------------------------------")
-        print(f"[AVVIO] Caricamento dei Cogs in corso...")
+        print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
+        print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
         
         # Carica automaticamente tutti i cogs presenti nella cartella cogs prima dell'avvio
         for filename in os.listdir("./cogs"):
@@ -48,16 +49,7 @@ class MyBot(commands.Bot):
                     await self.load_extension(f"cogs.{cog_name}")
                     print(f"[COG] Caricato con successo: {cog_name}")
                 except Exception as e:
-                    print(f"[ERRORE] Impossibile caricare {cog_name}: {e}")
-
-        # REGISTRAZIONE DELLE VIEW PERSISTENTI (Impedisce che i bottoni scadano al riavvio)
-        try:
-            self.add_view(SuggerimentiView())
-            self.add_view(FattoView())
-            print("[VIEWS] Viste persistenti registrate con successo!")
-        except Exception as e:
-            print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
-        print(f"-----------------------------------")
+                    print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
 
 bot = MyBot()
 
