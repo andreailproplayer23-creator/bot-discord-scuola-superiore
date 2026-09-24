@@ -33,6 +33,9 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# ID del server Discord 1ªB Informatica per la sincronizzazione istantanea
+GUILD_ID = discord.Object(id=1551330601079021719)
+
 @bot.event
 async def on_ready():
     print(f"-----------------------------------")
@@ -58,10 +61,11 @@ async def on_ready():
     except Exception as e:
         print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
 
-    # Sincronizza i comandi con Discord
+    # Sincronizza i comandi istantaneamente sul server specifico
     try:
-        synced = await bot.tree.sync()
-        print(f"[COMANDI] Sincronizzati {len(synced)} comandi slash con successo!")
+        bot.tree.copy_global_to(guild=GUILD_ID)
+        synced = await bot.tree.sync(guild=GUILD_ID)
+        print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
     except Exception as e:
         print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
     print(f"-----------------------------------")
