@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import os
-import asyncio
 from flask import Flask
 from threading import Thread
 
@@ -29,47 +28,48 @@ intents.members = True
 intents.guilds = True
 intents.voice_states = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
-GUILD_ID = discord.Object(id=1551330601079021719)
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix="!", intents=intents)
+        self.guild_id = discord.Object(id=1551330601079021719)
 
-async def setup_bot_elements():
-    print(f"-----------------------------------")
-    print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
-    print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
-    print(f"-----------------------------------")
-    
-    # Caricamento esplicito dei Cogs
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            cog_name = filename[:-3]
-            try:
-                await bot.load_extension(f"cogs.{cog_name}")
-                print(f"[COG] Caricato con successo: {cog_name}")
-            except Exception as e:
-                print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
+    async def setup_hook(self):
+        print(f"-----------------------------------")
+        print(f"[AVVIO] Directory di lavoro: {os.getcwd()}")
+        print(f"[AVVIO] Contenuto cartella cogs: {os.listdir('./cogs') if os.path.exists('./cogs') else 'CARTELLA NON TROVATA'}")
+        
+        # Caricamento esplicito di tutti i cogs
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py"):
+                cog_name = filename[:-3]
+                try:
+                    await self.load_extension(f"cogs.{cog_name}")
+                    print(f"[COG] Caricato con successo: {cog_name}")
+                except Exception as e:
+                    print(f"[ERRORE GRAVE] Impossibile caricare {cog_name}: {e}")
 
-    # Registrazione delle viste persistenti
-    try:
-        bot.add_view(SuggerimentiView())
-        bot.add_view(FattoView())
-        print("[VIEWS] Viste persistenti registrate con successo!")
-    except Exception as e:
-        print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
+        # Registrazione delle viste persistenti
+        try:
+            self.add_view(SuggerimentiView())
+            self.add_view(FattoView())
+            print("[VIEWS] Viste persistenti registrate con successo!")
+        except Exception as e:
+            print(f"[ERRORE] Impossibile registrare le viste persistenti: {e}")
 
-    # Sincronizzazione dei comandi sul server
-    try:
-        bot.tree.copy_global_to(guild=GUILD_ID)
-        synced = await bot.tree.sync(guild=GUILD_ID)
-        print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
-    except Exception as e:
-        print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
-    print(f"-----------------------------------")
+        # Sincronizzazione dei comandi sul server
+        try:
+            self.tree.copy_global_to(guild=self.guild_id)
+            synced = await self.tree.sync(guild=self.guild_id)
+            print(f"[COMANDI] Sincronizzati {len(synced)} comandi sul server 1ªB Informatica!")
+        except Exception as e:
+            print(f"[ERRORE] Sincronizzazione comandi fallita: {e}")
+        print(f"-----------------------------------")
+
+bot = MyBot()
 
 @bot.event
 async def on_ready():
     print(f"Bot online come: {bot.user.name} (ID: {bot.user.id})")
-    # Eseguiamo il setup non appena il bot è pronto sul serio
-    await setup_bot_elements()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
